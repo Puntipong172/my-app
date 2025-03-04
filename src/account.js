@@ -1,56 +1,63 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
+
 export default function Account({ session }) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("");
   const [website, setWebsite] = useState("");
   const [avatar_url, setAvatar] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(session?.user?.email || "");
+
   useEffect(() => {
-    if (session) getProfile();
-  }, [session]);
-  async function getProfile() {
+    if (!session) {
+      navigate("/");
+    } else {
+      fetchProfile();
+    }
+  }, [session, navigate]);
+
+  const fetchProfile = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) return;
-      let { data, error, status } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
-        .select(`username, website, avatar_url`)
-        .eq("id", user.id)
+        .select("username, website, avatar_url, full_name, phone")
+        .eq("id", session.user.id)
         .single();
-      if (error && status !== 406) throw error;
+
+      if (error && error.code !== "PGRST116") throw error;
+
       if (data) {
         setUsername(data.username || "");
         setWebsite(data.website || "");
         setAvatar(data.avatar_url || "");
+        setFullName(data.full_name || "");
+        setPhone(data.phone || "");
       }
     } catch (error) {
       console.error("Error fetching profile:", error.message);
     } finally {
       setLoading(false);
     }
-  }
-  async function updateProfile() {
+  };
+
+  const updateProfile = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) throw new Error("User not found");
-      const updates = {
-        id: user.id,
+      const { error } = await supabase.from("profiles").upsert({
+        id: session.user.id,
+        email: session.user.email,
         username,
         website,
         avatar_url,
-        updated_at: new Date(),
-      };
-      let { error } = await supabase.from("profiles").upsert(updates);
+        full_name: fullName,
+        phone,
+      });
+
       if (error) throw error;
       alert("Profile updated successfully!");
     } catch (error) {
@@ -58,98 +65,69 @@ export default function Account({ session }) {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        backgroundColor: "#f5f5f5",
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      backgroundColor: "#f5f5f5"
+    }}>
+      <div style={{
+        width: "100%",
+        maxWidth: "400px",
+        padding: "40px",
+        backgroundColor: "white",
+        borderRadius: "10px",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
       }}>
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "400px",
-          padding: "40px",
-          backgroundColor: "white",
-          borderRadius: "10px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            textAlign: "center",
-            marginBottom: "10px",
-          }}
-        >
-          Profile
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "20px" }}>
+          Profile Page
         </h1>
-        <p
-          style={{
-            color: "#666",
-            textAlign: "center",
-            marginBottom: "30px",
-          }}
-        >
-          Update your profile information below
-        </p>
-        <div style={{ marginBottom: "20px" }}>
-          <label htmlFor="email" style={{ display: "block", marginBottom: "8px" }}>
-            Email
-          </label>
-          <input
-            type="text"
-            id="email"
-            value={session?.user?.email || ""}
-            disabled
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-              backgroundColor: "#f9f9f9",
-              color: "#888",
-            }}
-          />
-        </div>
-        <div style={{ marginBottom: "20px" }}>
-          <label htmlFor="username" style={{ display: "block", marginBottom: "8px" }}>
-            Name
-          </label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-            }}
-          />
-        </div>
-        <div style={{ marginBottom: "20px" }}>
-          <label htmlFor="website" style={{ display: "block", marginBottom: "8px" }}>
-            Website
-          </label>
-          <input
-            type="text"
-            id="website"
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "1px solid #ddd",
-              borderRadius: "6px",
-            }}  />
-        </div>
+        <input
+          type="email"
+          value={email}
+          disabled
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
+        <input
+          type="text"
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
+        <input
+          type="text"
+          placeholder="Website"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
+        <input
+          type="text"
+          placeholder="Avatar URL"
+          value={avatar_url}
+          onChange={(e) => setAvatar(e.target.value)}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "6px", marginBottom: "15px" }}
+        />
         <button
           onClick={updateProfile}
           disabled={loading}
@@ -161,25 +139,29 @@ export default function Account({ session }) {
             border: "none",
             borderRadius: "6px",
             fontWeight: "500",
+            marginInlineStart: "3%",
             cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-            marginBottom: "20px",  }} >
-          {loading ? "Updating..." : "Update Profile"}
+            opacity: loading ? 0.7 : 1
+          }}>
+          {loading ? "Saving..." : "Update Profile"}
         </button>
-        <button
-          onClick={() => supabase.auth.signOut()}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#ddd",
-            color: "#333",
-            border: "none",
-            borderRadius: "6px",
-            fontWeight: "500",
-            cursor: "pointer",   }} >
-          Sign Out
-        </button>
-      </div>
+            <div>
+              <button onClick={() => navigate("/profiles")} style={{
+                width: "35%",
+                padding: "8px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontWeight: "500",
+                marginTop: "16px",
+                marginInlineStart: "68%"
+                }}>
+                View All Profiles
+              </button>
+            </div>
+        </div>
     </div>
   );
+  
 }

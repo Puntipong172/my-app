@@ -1,27 +1,34 @@
-import './App.css';import './index.css';  
-import { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient';
-import Auth from './Auth';  import Account from './account';
-function App() {
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Auth from "./Auth";
+import Account from "./account";
+import Profiles from "./Profiles"; // ⬅️ นำเข้าไฟล์ใหม่
+import { useEffect, useState } from "react";
+import { supabase } from "./supabaseClient";
+
+export default function App() {
   const [session, setSession] = useState(null);
+
   useEffect(() => {
-    // ✅ ตรวจสอบ Session ที่อัปเดตล่าสุด
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) console.error("Error getting session:", error);
-      setSession(data?.session || null);
-    };
-    getSession();
-    // ✅ ติดตามการเปลี่ยนแปลงของ Auth State
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-    return () => listener.subscription?.unsubscribe();
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
+
   return (
-    <div className="container" style={{ padding: '50px 0 100px 0'}}>
-      {!session ? <Auth /> : <Account key={session?.user?.id} session={session} />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Auth />} />
+        <Route path="/account" element={<Account session={session} />} />
+        <Route path="/profiles" element={<Profiles />} /> {/* ✅ เพิ่มเส้นทางนี้ */}
+      </Routes>
+    </Router>
   );
 }
-export default App;
