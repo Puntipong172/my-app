@@ -34,7 +34,7 @@ export default function Auth() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "http://localhost:3000/reset-password",
+        redirectTo:"https://my-app-ten-navy.vercel.app/reset-password",
       });
       if (error) throw error;
       alert("Check your email to reset password.");

@@ -28,12 +28,11 @@ export default function Account({ session }) {
         .select("username, website, avatar_url, full_name, phone")
         .eq("id", session.user.id)
         .single();
-
       if (error && error.code !== "PGRST116") throw error;
-
       if (data) {
         setUsername(data.username || "");
         setWebsite(data.website || "");
+        setEmail(data.email || "");
         setAvatar(data.avatar_url || "");
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
@@ -44,7 +43,6 @@ export default function Account({ session }) {
       setLoading(false);
     }
   };
-
   const updateProfile = async () => {
     setLoading(true);
     try {

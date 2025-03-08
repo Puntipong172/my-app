@@ -1,11 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabaseClient";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
+  const [email, setEmail] = useState("Loading...");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // รีเฟรช session เพื่อดึงข้อมูล user
+        await supabase.auth.refreshSession();
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        setEmail(data?.user?.email || "No email found");
+      } catch (error) {
+        console.error("Error fetching user:", error.message);
+        setEmail("No email found");
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleResetPassword = async () => {
     setLoading(true);
@@ -42,8 +60,16 @@ export default function ResetPassword() {
         <h1 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "10px" }}>
           Reset Password
         </h1>
-        <p style={{ color: "#666", textAlign: "center", marginBottom: "30px" }}>
-          Enter your new password below.
+        <p style={{ color: "#666", textAlign: "center", marginBottom: "10px" }}>
+          Reset password for:
+        </p>
+        <p style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          color: "#2563eb",
+          marginBottom: "20px"
+        }}>
+          {email}
         </p>
         <input
           type="password"
