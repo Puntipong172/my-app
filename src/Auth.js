@@ -21,7 +21,8 @@ export default function Auth() {
       if (result.error) throw result.error;
 
       alert(isSignUp ? "Sign up successful! Please check your email." : "Login successful!");
-      if (!isSignUp) navigate("/account");
+      if (!isSignUp) navigate("/durian");
+      //if (!isSignUp) navigate("/durain");
     } catch (error) {
       alert(error.message);
     } finally {

@@ -5,6 +5,8 @@ import Profiles from "./Profiles";
 import Resetpassword from "./Resetpassword"; 
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
+import Durian from "./durian";
+import Grape from "./grape";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -28,6 +30,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Auth />} />
         <Route path="/account" element={<Account session={session} />} />
+        <Route path="/grape" element={<Grape session={session}  />} />
+        <Route path="/durian" element={<Durian session={session}  />} />
         <Route path="/profiles" element={<Profiles />} />
         <Route path="/reset-password" element={<Resetpassword />} /> 
       </Routes>

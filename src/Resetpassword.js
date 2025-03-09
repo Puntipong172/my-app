@@ -11,7 +11,6 @@ export default function ResetPassword() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // รีเฟรช session เพื่อดึงข้อมูล user
         await supabase.auth.refreshSession();
         const { data, error } = await supabase.auth.getUser();
         if (error) throw error;
@@ -29,7 +28,6 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-
       if (error) throw error;
       alert("Password updated successfully! Please login again.");
       navigate("/");
@@ -60,16 +58,9 @@ export default function ResetPassword() {
         <h1 style={{ fontSize: "24px", fontWeight: "bold", textAlign: "center", marginBottom: "10px" }}>
           Reset Password
         </h1>
-        <p style={{ color: "#666", textAlign: "center", marginBottom: "10px" }}>
-          Reset password for:
-        </p>
-        <p style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          color: "#2563eb",
-          marginBottom: "20px"
-        }}>
-          {email}
+        <p style={{ textAlign: "center", color: "#555555", marginBottom: "10px" }}>
+          For this your email:{" "}
+        <span style={{ fontWeight: "bold", color: "#000fff" }}>{email}</span>
         </p>
         <input
           type="password"
